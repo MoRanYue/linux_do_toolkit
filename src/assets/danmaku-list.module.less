@@ -1,0 +1,56 @@
+.danmaku-list {
+    position: relative;
+    border: 1px solid var(--border);
+    @radius: 2rem;
+    border-radius: @radius;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+
+    .bg {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg);
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        // filter: opacity(0.5);
+        z-index: -1;
+    }
+
+    .content {
+        display: flex;
+        flex-direction: column;
+        padding: 1.25em;
+        
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            h2 {
+                display: block;
+                white-space: pre-wrap;
+                text-shadow: var(--shadow);
+            }
+
+            p {
+                color: var(--text-muted);
+                font-weight: bold;
+                text-shadow: var(--shadow);
+            }
+        }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5em;
+            list-style: none;
+            width: 100%;
+            height: 100%;
+        }
+    }
+}

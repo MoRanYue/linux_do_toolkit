@@ -1,0 +1,127 @@
+@import "./vars.less";
+
+:root {
+    interpolate-size: allow-keywords;
+    
+    --text: @text;
+    --text-muted: @text-muted;
+    --highlight: @highlight;
+    --bg-light: @bg-light;
+    --bg: @bg;
+    --bg-dark: @bg-dark;
+    --border: @border;
+    --border-muted: @border-muted;
+    --primary: @primary;
+    --secondary: @secondary;
+    --danger: @danger;
+    --warning: @warning;
+    --success: @success;
+    --info: @info;
+
+    --gradient: linear-gradient(
+        0deg,
+        var(--background) 95%,
+        var(--background-light)
+    );
+    --gradient-hover: linear-gradient(
+        0deg,
+        var(--background),
+        var(--background-light)
+    );
+    --gradient-active: linear-gradient(
+        0deg,
+        var(--background-dark),
+        var(--background)
+    );
+
+    --shadow: 0px 2px 2px rgba(0, 0, 0, 0.07),
+        0px 4px 4px rgba(0, 0, 0, 0.15);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+        "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+        "Helvetica Neue", "Microsoft Yahei", "宋体", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    box-sizing: border-box;
+    color: var(--text);
+
+    scrollbar-width: thin;
+    scrollbar-color: var(--danger) var(--bg-dark);
+
+    &::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+        background: transparent;
+    }
+    
+    &::-webkit-scrollbar-track {
+        background: var(--bg-dark);
+        border-radius: inherit;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        background: var(--danger);
+        border-radius: inherit;
+        background-clip: content-box;
+        transition: 0.2s;
+        
+        &:hover {
+            background: var(--primary);
+        }
+        
+        &:active {
+            background: var(--secondary);
+        }
+    }
+}
+
+textarea {
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+        border-width: 2px;
+    }
+}
+
+html, body, #root {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
+    // backdrop-filter: blur(50px);
+}
+
+a {
+    position: relative;
+    color: var(--text);
+    text-decoration: none;
+    transition: 0.2s ease-out;
+    cursor: pointer;
+
+    &:hover {
+        color: var(--primary);
+    }
+
+    &:visited {
+        color: var(--text-muted);
+    }
+
+    &:active {
+        color: var(--secondary);
+    }
+}
+
+hr {
+    appearance: none;
+    border: 1px solid var(--border);
+    margin: 0.5em 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+}
