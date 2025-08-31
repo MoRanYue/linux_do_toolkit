@@ -52,7 +52,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev build-essential curl pkg-config
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev build-essential curl pkg-config
 
       - name: Install frontend deps with Bun & read version
         run: |
@@ -79,9 +79,6 @@ jobs:
           echo "OS_LABEL=$OS_LABEL" >> $GITHUB_ENV
           echo "ARCH_LABEL=$ARCH_LABEL" >> $GITHUB_ENV
           echo "OUT_NAME=linux_do_toolkit_v${VERSION}_${OS_LABEL}_${ARCH_LABEL}" >> $GITHUB_ENV
-
-      - name: Build frontend
-        run: bun run build
 
       - name: Cargo Tauri build
         run: |
