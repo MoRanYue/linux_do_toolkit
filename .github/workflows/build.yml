@@ -73,7 +73,7 @@ jobs:
 
       - name: Determine OS/ARCH label
         run: |
-          if [ "${{ matrix.os }}" = "ubuntu-22.04" ]; then
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             OS_LABEL=linux
           elif [ "${{ matrix.os }}" = "windows-latest" ]; then
             OS_LABEL=windows
