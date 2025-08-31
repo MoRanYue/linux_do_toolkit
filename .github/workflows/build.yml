@@ -57,7 +57,7 @@ jobs:
       - name: Install frontend deps with Bun & read version
         run: |
           bun install
-          VERSION=$(bun run --silent "console.log(require('./package.json').version || '0.0.0')")
+          VERSION=$(bun x --silent "console.log(require('./package.json').version || '0.0.0')")
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
         shell: bash
 
