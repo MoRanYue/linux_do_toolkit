@@ -6,8 +6,15 @@ export function Expander(props) {
     const [is_expanded, set_is_expanded] = createSignal(false);
 
     return (
-        <div class={styles.expander}>
-            <div class={styles.instruction} onClick={() => set_is_expanded(e => !e)}>
+        <div
+            class={styles.expander}
+            onMouseOver={props.expand_when_hover && (() => set_is_expanded(true))}
+            onMouseLeave={props.expand_when_hover && (() => set_is_expanded(false))}
+        >
+            <div
+                class={styles.instruction}
+                onClick={!props.expand_when_hover && (() => set_is_expanded(e => !e))}
+            >
                 <span class={styles.text}>{props.instruction}</span>
 
                 <Icon

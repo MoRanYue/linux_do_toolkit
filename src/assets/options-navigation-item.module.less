@@ -1,0 +1,21 @@
+.options-navigation-item {
+    display: block;
+    padding: 0.5em 1em;
+    background: var(--bg-light);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: var(--text);
+    text-decoration: none;
+    margin-bottom: 0.5em;
+    transition: 0.2s ease;
+    box-shadow: var(--shadow);
+
+    &:hover {
+        background: var(--info);
+    }
+
+    &:active, &.active {
+        background: var(--primary);
+        color: var(--bg-light);
+    }
+}

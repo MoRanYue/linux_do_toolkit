@@ -21,12 +21,13 @@
     }
 
     .content {
-        padding-top: @padding;
+        padding-top: 0;
         height: 0;
         overflow: hidden;
-        transition: height 0.3s ease-out;
+        transition: 0.3s ease-out;
 
         &[is_expanded="true"] {
+            padding-top: @padding;
             height: auto;
         }
     }

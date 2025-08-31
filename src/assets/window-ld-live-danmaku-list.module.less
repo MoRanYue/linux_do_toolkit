@@ -1,4 +1,4 @@
-.danmaku-list {
+.window-ld-live-danmaku-list {
     position: relative;
     border: 1px solid var(--border);
     @radius: 2rem;
@@ -30,17 +30,20 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            user-select: none;
 
-            h2 {
+            h1, h2 {
                 display: block;
                 white-space: pre-wrap;
                 text-shadow: var(--shadow);
+                pointer-events: none;
             }
 
             p {
                 color: var(--text-muted);
                 font-weight: bold;
                 text-shadow: var(--shadow);
+                pointer-events: none;
             }
         }
 

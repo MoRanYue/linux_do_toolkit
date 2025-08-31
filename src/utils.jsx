@@ -1,4 +1,11 @@
-export const API_BASE_URL = "https://live.smnet.studio";
+/**
+ * @param {string} s
+ * @param {string} char
+ */
+export function char_count_in(s, char) {
+    return Array.from(s)
+        .reduce((prev_value, cur_value) => cur_value === char ? ++prev_value : prev_value, 0);
+}
 
 export class FetchError extends Error {
     constructor(status_code, content) {
@@ -33,6 +40,7 @@ export const HttpMethod = Object.freeze({
 /**
  * @typedef {Object} FetchApiOptions
  * @property {string} path
+ * @property {string} base_url
  * @property {HttpMethod} method
  * @property {number} [timeout_ms]
  * @property {Record<string, string | string[]>} [query]
@@ -47,6 +55,7 @@ export const HttpMethod = Object.freeze({
 export async function fetch_api(options) {
     const {
         path,
+        base_url,
         method,
         timeout_ms = 10000,
         query = {},
@@ -75,7 +84,11 @@ export async function fetch_api(options) {
         }
     }
 
-    const url = new URL(path, API_BASE_URL);
+    if (!final_headers["User-Agent"]) {
+        final_headers["User-Agent"] = navigator.userAgent + " LINUX_DO_Toolkit/" + import.meta.env.VERSION;
+    }
+
+    const url = new URL(path, base_url);
     url.search = query ?
         "?" + Object.keys(query)
             .map(k => {

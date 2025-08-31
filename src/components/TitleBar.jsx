@@ -4,37 +4,42 @@ import { ButtonList } from "./ButtonList";
 import { IconButton } from "./IconButton";
 import { WindowContext } from "./WindowProvider";
 import { createAsync } from "@solidjs/router";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 export function TitleBar(props) {
-    const { main } = useContext(WindowContext);
+    const cur_window = getCurrentWebviewWindow();
 
-    const title = createAsync(() => main.title());
+    const title = createAsync(() => cur_window.title());
 
     return (
-        <aside data-tauri-drag-region class={styles["title-bar"]}>
-            <Suspense>
-                <div class={styles.content}>
-                    <h1>{title()}</h1>
-                </div>
-            </Suspense>
+        <>
+            <div class={styles.placeholder} />
 
-            <ButtonList>
-                <IconButton
-                    title="最小化"
-                    name="CollapseTextInput"
-                    onClick={() => main.minimize()}
-                />
-                <IconButton
-                    title="切换最大化"
-                    name="Square"
-                    onClick={() => main.toggleMaximize()}
-                />
-                <IconButton
-                    title="关闭"
-                    name="Close"
-                    onClick={() => main.close()}
-                />
-            </ButtonList>
-        </aside>
+            <aside data-tauri-drag-region class={styles["title-bar"]}>
+                <Suspense>
+                    <div class={styles.content}>
+                        <h1>{title()}</h1>
+                    </div>
+                </Suspense>
+
+                <ButtonList>
+                    <IconButton
+                        title="最小化"
+                        name="CollapseTextInput"
+                        onClick={() => cur_window.minimize()}
+                    />
+                    <IconButton
+                        title="切换最大化"
+                        name="Square"
+                        onClick={() => cur_window.toggleMaximize()}
+                    />
+                    <IconButton
+                        title="关闭"
+                        name="Close"
+                        onClick={() => cur_window.close()}
+                    />
+                </ButtonList>
+            </aside>
+        </>
     );
 }

@@ -1,0 +1,31 @@
+.textarea {
+    appearance: none;
+    display: block;
+    color: var(--text);
+    background: var(--bg-light);
+    transition: border, color, background 0.2s ease-out;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.375em;
+    box-shadow: var(--shadow);
+    min-width: 0;
+    min-height: 0;
+    max-width: 100%;
+
+    &:focus {
+        outline: none;
+        border: 1px solid var(--primary);
+    }
+
+    &::placeholder {
+        color: var(--text-muted)
+    }
+
+    &:disabled {
+        color: var(--text-muted);
+        background: var(--disabled);
+    }
+    &:read-only {
+        background: var(--disabled);
+    }
+}

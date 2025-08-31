@@ -1,3 +1,5 @@
+pub mod commands;
+
 use tauri::{TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -18,8 +20,7 @@ pub fn run() {
                 WebviewUrl::default()
             )
                 .title("LINUX DO Toolkit")
-                .inner_size(600.0, 400.0)
-                /* .transparent(true) */;
+                .inner_size(600.0, 400.0);
 
             #[cfg(target_os = "macos")]
             let window_builder = window_builder.title_bar_style(TitleBarStyle::Transparent);
@@ -50,6 +51,9 @@ pub fn run() {
 
             Ok(())
         })
+        // .invoke_handler(tauri::generate_handler![
+        //     commands::build_danmaku_list_window
+        // ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

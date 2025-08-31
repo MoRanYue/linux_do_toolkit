@@ -1,0 +1,104 @@
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.3s;
+    mix-blend-mode: multiply;
+}
+
+::view-transition-old(root) {
+    animation-name: fading-out;
+    animation-timing-function: ease-out;
+}
+::view-transition-new(root) {
+    animation-name: fading-in;
+    animation-timing-function: ease-in;
+}
+
+[data-transition-direction="Deeper"] {
+    &::view-transition-old(root) {
+        animation-name: sliding-left-out;
+    }
+    &::view-transition-new(root) {
+        animation-name: sliding-right-in;
+    }
+}
+[data-transition-direction="Shallower"] {
+    &::view-transition-old(root) {
+        animation-name: sliding-right-out;
+    }
+    &::view-transition-new(root) {
+        animation-name: sliding-left-in;
+    }
+}
+
+@sliding-rate: 40%;
+
+@keyframes sliding-left-in {
+    from {
+        transform: translateX(-@sliding-rate);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes sliding-right-out {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(@sliding-rate);
+        opacity: 0;
+    }
+}
+
+@keyframes sliding-right-in {
+    from {
+        transform: translateX(@sliding-rate);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes sliding-left-out {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-@sliding-rate);
+        opacity: 0;
+    }
+}
+
+@keyframes fading-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fading-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+html::view-transition {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+}
