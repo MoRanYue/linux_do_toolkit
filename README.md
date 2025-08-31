@@ -1,34 +1,29 @@
-## Usage
+# LINUX DO Toolkit
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+（它仅仅是，1款十分简陋的LINUX DO工具呀……）
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+---
 
-```bash
-$ npm install # or pnpm install or yarn install
+## 已实现
+
+- LD Live弹幕展示器
+
+## 使用技术
+
+- SolidJS
+- Bun
+- Tauri
+
+## 构建
+
+1. 安装[Rust](https://www.rust-lang.org/zh-CN/tools/install)、[Node.js](https://nodejs.org/zh-cn/download)与[Bun](https://bun.sh)。
+2. 若没有安装`tauri-cli`，可选择执行`cargo install tauri-cli --version "^2.0.0" --locked`以安装它。
+3. 执行以下命令。
+
+```
+git clone https://github.com/MoRanYue/linux_do_toolkit
+cd linux_do_toolkit
+cargo tauri build
 ```
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm run dev` or `npm start`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br>
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+4. 可执行文件位于`target/release/`目录中。

@@ -27,7 +27,7 @@ export function Home() {
                         <ButtonNavigation class={styles["button-navigation"]} href="/options/ld_live_danmaku_list">选项</ButtonNavigation>
                     </Card>
 
-                    <Card title="论坛活跃">
+                    {/* <Card title="论坛活跃">
                         <Expander instruction="显示描述" expand_when_hover>
                             <p style={{ color: "var(--text-muted)" }}>
                                 包含多种用于论坛活跃与提升等级的工具。
@@ -35,7 +35,7 @@ export function Home() {
                         </Expander>
 
                         <ButtonNavigation class={styles["button-navigation"]} href="/options/forum_activity">选项</ButtonNavigation>
-                    </Card>
+                    </Card> */}
                 </div>
             </main>
         </>
