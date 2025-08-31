@@ -2,12 +2,12 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "linux_do_toolkit",
   "version": "0.1.0",
-  "identifier": "io.github.moranyue.linux_do_toolkit",
+  "identifier": "io.github.moranyue.linux-do-toolkit",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "bun dev",
-    "beforeBuildCommand": "bun build"
+    "beforeBuildCommand": "bunx vite build"
   },
   "app": {
     "macOSPrivateApi": true,

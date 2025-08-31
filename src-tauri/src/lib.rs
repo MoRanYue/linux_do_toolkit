@@ -25,7 +25,7 @@ pub fn run() {
             #[cfg(not(target_os = "macos"))]
             let window_builder = window_builder.decorations(false);
 
-            let window = window_builder.build().unwrap();
+            let _window = window_builder.build().unwrap();
 
             #[cfg(target_os = "macos")]
             {
@@ -53,7 +53,7 @@ pub fn run() {
         // ])
         .on_window_event(|window, ev| {
             match ev {
-                WindowEvent::CloseRequested { api, .. } => {
+                WindowEvent::CloseRequested { .. } => {
                     if window.label() == "main" {
                         window.app_handle().exit(0);
                     }

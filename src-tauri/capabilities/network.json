@@ -10,7 +10,10 @@
       "identifier": "http:default",
       "allow": [
         {
-          "url": "https://live.smnet.studio"
+          "url": "http://*:*"
+        },
+        {
+          "url": "https://*:*"
         }
       ]
     }

@@ -14,7 +14,7 @@ export function FormInputCheckbox(props) {
                 disabled={props.disabled}
                 readonly={props.readonly}
                 required={props.required}
-                checked={props.checked ?? props.value ?? false}
+                checked={props.checked || props.value}
                 onChange={props.onChange}
             />
         </div>

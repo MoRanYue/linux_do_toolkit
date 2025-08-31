@@ -35,15 +35,19 @@ function color_from_3_chars(s) {
 export function Danmaku(props) {
     return (
         <li class={styles.danmaku}>
-            <div class={styles.avatar} style={{
-                "background-color": color_from_3_chars(props.user_name)
-            }}>
-                <span class={styles.name}></span>
+            <div class={styles["user-info"]}>
+                <div class={styles.name}>
+                    <span>{props.user_name}</span>
+                </div>
 
-                {/* use user name as an alternative */}
-                <Show when={props.user_name !== "游客"}>
-                    <span class={styles.image}>{props.user_name.charAt(0)}</span>
-                </Show>
+                <div class={styles.avatar} style={{
+                    "background-color": color_from_3_chars(props.user_name)
+                }}>
+                    {/* use user name as an alternative */}
+                    <Show when={props.user_name !== "游客"}>
+                        <span class={styles.image}>{props.user_name.charAt(0)}</span>
+                    </Show>
+                </div>
             </div>
 
             <div class={styles.content}>

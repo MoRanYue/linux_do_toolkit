@@ -34,7 +34,10 @@ export function WindowLdLiveDanmakuList(props) {
     const [state, set_state] = createStore({
         settings: {
             bg_image: "",
-            web_hook_host: null,
+            web_hook: {
+                url: null,
+                auth_token: ""
+            },
             show_room_id: true,
             title: null
         },
@@ -58,7 +61,8 @@ export function WindowLdLiveDanmakuList(props) {
             path: "/api/danmaku-list",
             base_url: BASE_URL,
             query: {
-                roomId: state.room.id
+                roomId: state.room.id,
+                since: state.update_time
             }
         })
             .then(data => {
@@ -68,7 +72,7 @@ export function WindowLdLiveDanmakuList(props) {
 
                 const danmakus = data.messages
                     .filter(d => {
-                        for (let i = state.danmakus.length - 1; i > state.danmakus.length - 21 && i > 0; i--) {
+                        for (let i = state.danmakus.length - 1; i > state.danmakus.length - 21 && i >= 0; i--) {
                             const original_d = state.danmakus[i];
                             
                             if (d.id == original_d.id) {
@@ -88,6 +92,17 @@ export function WindowLdLiveDanmakuList(props) {
                             time: new Date(d.timestamp)
                         };
                     });
+                
+                if (danmakus.length && state.settings.web_hook.url) {
+                    fetch_api({
+                        path: state.settings.web_hook.url,
+                        method: HttpMethod.Post,
+                        body: {
+                            hook: "danmaku_sent",
+                            danmakus: danmakus.map(d => { return { ...d, time: d.time.getTime() } })
+                        }
+                    });
+                }
 
                 set_state({
                     danmakus: state.danmakus.concat(danmakus),
@@ -130,16 +145,16 @@ export function WindowLdLiveDanmakuList(props) {
         win.emit("ready", null);
     });
 
-    if (import.meta.env.DEV) {
-        set_state("danmakus", danmakus => danmakus.concat([{
-            id: "test",
-            text: "Test",
-            user_id: "test",
-            user_name: "Test User",
-            color: "#000000",
-            time: new Date()
-        }]));
-    }
+    // if (import.meta.env.DEV) {
+    //     set_state("danmakus", danmakus => danmakus.concat([{
+    //         id: "test",
+    //         text: "Test",
+    //         user_id: "test",
+    //         user_name: "Test User",
+    //         color: "#000000",
+    //         time: new Date()
+    //     }]));
+    // }
 
     onCleanup(() => {
         clearInterval(timer);
