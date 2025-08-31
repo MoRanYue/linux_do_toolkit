@@ -52,7 +52,15 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev build-essential curl pkg-config
+          sudo apt-get install -y libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
 
       - name: Read package.json
         uses: rexdefuror/read-package-json@v1.0.5
@@ -65,12 +73,15 @@ jobs:
 
       - name: Determine OS/ARCH label
         run: |
-          case "${{ matrix.os }}" in
-            "ubuntu-latest") OS_LABEL=linux ;;
-            "windows-latest") OS_LABEL=windows ;;
-            "macos-latest")   OS_LABEL=macos ;;
-            *) OS_LABEL=unknown ;;
-          esac
+          if [ "${{ matrix.os }}" = "ubuntu-22.04" ]; then
+            OS_LABEL=linux
+          elif [ "${{ matrix.os }}" = "windows-latest" ]; then
+            OS_LABEL=windows
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            OS_LABEL=macos
+          else
+            OS_LABEL=unknown
+          fi
 
           if [ "${{ matrix.arch }}" = "x86_64" ]; then
             ARCH_LABEL=x64
@@ -81,6 +92,7 @@ jobs:
           echo "OS_LABEL=$OS_LABEL" >> $GITHUB_ENV
           echo "ARCH_LABEL=$ARCH_LABEL" >> $GITHUB_ENV
           echo "OUT_NAME=linux_do_toolkit_v${VERSION}_${OS_LABEL}_${ARCH_LABEL}" >> $GITHUB_ENV
+        shell: bash
 
       - name: Cargo Tauri build
         run: |
