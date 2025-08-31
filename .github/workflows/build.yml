@@ -1,128 +1,65 @@
-name: CI - Tauri multi-arch build
+name: "Build and publish"
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  packages: write
-  actions: write
+# This workflow will trigger on each push to the `release` branch to create or update a GitHub release, build your app, and upload the artifacts to the release.
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  publish-tauri:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        arch: [x86_64, aarch64]
+        include:
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: ''
+          - platform: 'windows-latest'
+            args: ''
 
+    runs-on: ${{ matrix.platform }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Install tauri-cli
-        run: cargo install tauri-cli --locked
-
-      - name: Add Rust targets
-        run: |
-          rustup target add x86_64-unknown-linux-gnu || true
-          rustup target add aarch64-unknown-linux-gnu || true
-          rustup target add x86_64-pc-windows-msvc || true
-          rustup target add aarch64-pc-windows-msvc || true
-          rustup target add x86_64-apple-darwin || true
-          rustup target add aarch64-apple-darwin || true
-
-      - name: Install Linux deps (only linux)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Install dependencies (Ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libxdo-dev \
-            libssl-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+        # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
+        # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
-      - name: Read package.json
-        uses: rexdefuror/read-package-json@v1.0.5
+      - name: Install frontend dependencies
+        run: bun install # change this to npm, pnpm or bun depending on which one you use.
 
-      - name: Install frontend deps with Bun & read version
-        run: |
-          bun install
-          echo "VERSION=${PACKAGE_VERSION}" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Determine OS/ARCH label
-        run: |
-          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            OS_LABEL=linux
-          elif [ "${{ matrix.os }}" = "windows-latest" ]; then
-            OS_LABEL=windows
-          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            OS_LABEL=macos
-          else
-            OS_LABEL=unknown
-          fi
-
-          if [ "${{ matrix.arch }}" = "x86_64" ]; then
-            ARCH_LABEL=x64
-          else
-            ARCH_LABEL=arm64
-          fi
-
-          echo "OS_LABEL=$OS_LABEL" >> $GITHUB_ENV
-          echo "ARCH_LABEL=$ARCH_LABEL" >> $GITHUB_ENV
-          echo "OUT_NAME=linux_do_toolkit_v${VERSION}_${OS_LABEL}_${ARCH_LABEL}" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Cargo Tauri build
-        run: |
-          case "${OS_LABEL}_${ARCH_LABEL}" in
-            linux_x64) TARGET="x86_64-unknown-linux-gnu" ;;
-            linux_arm64) TARGET="aarch64-unknown-linux-gnu" ;;
-            windows_x64) TARGET="x86_64-pc-windows-msvc" ;;
-            windows_arm64) TARGET="aarch64-pc-windows-msvc" ;;
-            macos_x64) TARGET="x86_64-apple-darwin" ;;
-            macos_arm64) TARGET="aarch64-apple-darwin" ;;
-          esac
-
-          echo "Building with cargo tauri build --target $TARGET"
-          cargo tauri build --target $TARGET
-
-          ARTIFACT=$(find src-tauri/target/$TARGET/release/bundle -type f | head -n1 || true)
-          if [ -z "$ARTIFACT" ]; then
-            echo "No artifact found, fallback to release binary."
-            ARTIFACT="src-tauri/target/$TARGET/release/*"
-          fi
-
-          EXT="${ARTIFACT##*.}"
-          OUTPATH="${OUT_NAME}.${EXT}"
-          cp "$ARTIFACT" "$OUTPATH" || true
-          echo "OUTPATH=$OUTPATH" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Upload build artifact
-        if: env.OUTPATH != ''
-        uses: actions/upload-artifact@v4
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${{ env.OUT_NAME }}
-          path: ${{ env.OUTPATH }}
+          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: 'App v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
