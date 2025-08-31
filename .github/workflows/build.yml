@@ -14,7 +14,6 @@ permissions:
 
 jobs:
   build:
-    # 矩阵：三个 runner（github-hosted），每个尝试 x86_64 与 aarch64
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -22,78 +21,48 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         arch: [x86_64, aarch64]
 
-    env:
-      # 前端构建命令（可根据项目修改）
-      FRONTEND_BUILD_CMD: "bunx vite build"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js (for reading package.json & frontend build)
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 18
-          cache: 'npm'
+          bun-version: latest
 
-      - name: Install Bun (optional, 同时使用 node 与 bun)
-        run: |
-          curl -fsSL https://bun.sh/install | bash -s -- -y
-          echo "$HOME/.bun/bin" >> $GITHUB_PATH
-        shell: bash
-
-      - name: Setup Rust toolchain
+      - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: stable
           override: true
 
-      - name: Add common Rust targets (best-effort)
+      - name: Install tauri-cli
+        run: cargo install tauri-cli --locked
+
+      - name: Add Rust targets
         run: |
-          # add targets we might need; 部分 target 在某些 runners 上可能无法完全打包（需要额外工具链）
           rustup target add x86_64-unknown-linux-gnu || true
           rustup target add aarch64-unknown-linux-gnu || true
           rustup target add x86_64-pc-windows-msvc || true
           rustup target add aarch64-pc-windows-msvc || true
           rustup target add x86_64-apple-darwin || true
           rustup target add aarch64-apple-darwin || true
-        shell: bash
 
-      - name: Install Linux build deps (only on linux runners)
+      - name: Install Linux deps (only linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          # Tauri Linux 依赖（常见），视项目可能需要调整
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev build-essential curl pkg-config
-        shell: bash
 
-      - name: Prepare Windows build deps (note)
-        if: matrix.os == 'windows-latest'
+      - name: Install frontend deps with Bun & read version
         run: |
-          echo "注意：Windows 的完整安装包（MSI/EXE）通常需要 WiX & MSVC 工具链。"
-          echo "GitHub Windows runner 已提供 Visual Studio 环境，但如果需要 WiX 请安装 choco packages（可按需调整）。"
-        shell: bash
-
-      - name: Prepare macOS build deps (note)
-        if: matrix.os == 'macos-latest'
-        run: |
-          echo "注意：macOS 打包（dmg, notarize 等）可能需要 codesign / Xcode tools。本 runner 已包含 Xcode CLI。"
-        shell: bash
-
-      - name: Install frontend deps (npm + bun) and read version
-        run: |
-          # 保证在可复现环境中安装依赖
-          npm ci
-          bun install || true
-          # 读取 package.json 中的 version（用于最终产物命名）
-          VERSION=$(node -e "console.log(require('./package.json').version || '0.0.0')")
+          bun install
+          VERSION=$(bun run --silent "console.log(require('./package.json').version || '0.0.0')")
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
         shell: bash
 
-      - name: Determine OS_LABEL / ARCH_LABEL and OUT_NAME
+      - name: Determine OS/ARCH label
         run: |
-          # OS label 映射
           case "${{ matrix.os }}" in
             "ubuntu-latest") OS_LABEL=linux ;;
             "windows-latest") OS_LABEL=windows ;;
@@ -101,7 +70,6 @@ jobs:
             *) OS_LABEL=unknown ;;
           esac
 
-          # arch label 映射
           if [ "${{ matrix.arch }}" = "x86_64" ]; then
             ARCH_LABEL=x64
           else
@@ -110,65 +78,34 @@ jobs:
 
           echo "OS_LABEL=$OS_LABEL" >> $GITHUB_ENV
           echo "ARCH_LABEL=$ARCH_LABEL" >> $GITHUB_ENV
-
-          # OUT_NAME 格式：linux_do_toolkit_v{VERSION}_{OS}_{ARCH}
           echo "OUT_NAME=linux_do_toolkit_v${VERSION}_${OS_LABEL}_${ARCH_LABEL}" >> $GITHUB_ENV
-          echo "Computed OUT_NAME=${OUT_NAME:-not-set}"
-        shell: bash
 
-      - name: Build frontend (using node)
+      - name: Build frontend
+        run: bun run build
+
+      - name: Cargo Tauri build
         run: |
-          echo "Run frontend build: $FRONTEND_BUILD_CMD"
-          $FRONTEND_BUILD_CMD
-        shell: bash
-
-      - name: Tauri / Rust build (best-effort for matrix)
-        run: |
-          set -e
-
-          # 计算 rust target triple
           case "${OS_LABEL}_${ARCH_LABEL}" in
-            linux_x64) TARGET_TRIPLE="x86_64-unknown-linux-gnu" ;;
-            linux_arm64) TARGET_TRIPLE="aarch64-unknown-linux-gnu" ;;
-            windows_x64) TARGET_TRIPLE="x86_64-pc-windows-msvc" ;;
-            windows_arm64) TARGET_TRIPLE="aarch64-pc-windows-msvc" ;;
-            macos_x64) TARGET_TRIPLE="x86_64-apple-darwin" ;;
-            macos_arm64) TARGET_TRIPLE="aarch64-apple-darwin" ;;
-            *) echo "Unsupported target: ${OS_LABEL}_${ARCH_LABEL}" ; exit 1 ;;
+            linux_x64) TARGET="x86_64-unknown-linux-gnu" ;;
+            linux_arm64) TARGET="aarch64-unknown-linux-gnu" ;;
+            windows_x64) TARGET="x86_64-pc-windows-msvc" ;;
+            windows_arm64) TARGET="aarch64-pc-windows-msvc" ;;
+            macos_x64) TARGET="x86_64-apple-darwin" ;;
+            macos_arm64) TARGET="aarch64-apple-darwin" ;;
           esac
 
-          echo "Building for target: $TARGET_TRIPLE"
+          echo "Building with cargo tauri build --target $TARGET"
+          cargo tauri build --target $TARGET
 
-          # 某些 target 在当前 runner 上可能需要额外的 linker / sysroot / cross 工具（这里为 best-effort）
-          rustup target add "$TARGET_TRIPLE" || true
-
-          # 使用 tauri build（优先），回退到 cargo 构建（release）
-          if command -v npx >/dev/null 2>&1; then
-            echo "Running: npx tauri build --target $TARGET_TRIPLE"
-            # 这里 tauri 的 builder 会根据 target 产物类型输出到 src-tauri/target/release/bundle/*
-            npx tauri build --target "$TARGET_TRIPLE" || true
-          fi
-
-          # also try direct cargo build for the target (best-effort)
-          cargo build --release --target "$TARGET_TRIPLE" || true
-
-          # 查找打包输出（尝试几个常见扩展）
-          ARTIFACT=$(find ./src-tauri/target -type f \( -name "*.AppImage" -o -name "*.deb" -o -name "*.dmg" -o -name "*.msi" -o -name "*.zip" -o -name "*.tar.gz" \) | head -n 1 || true)
+          ARTIFACT=$(find src-tauri/target/$TARGET/release/bundle -type f | head -n1 || true)
           if [ -z "$ARTIFACT" ]; then
-            # 若找不到常见安装包，尝试拾取第一个可执行文件（可根据项目调整）
-            ARTIFACT=$(find ./src-tauri/target -type f -perm -111 | head -n1 || true)
+            echo "No artifact found, fallback to release binary."
+            ARTIFACT="src-tauri/target/$TARGET/release/*"
           fi
 
-          if [ -z "$ARTIFACT" ]; then
-            echo "未能自动找到构建产物（请确认 tauri build 是否成功，或需要在 runner 上安装额外依赖）。"
-            ls -al src-tauri/target || true
-            exit 0
-          fi
-
-          echo "Found artifact: $ARTIFACT"
           EXT="${ARTIFACT##*.}"
           OUTPATH="${OUT_NAME}.${EXT}"
-          cp "$ARTIFACT" "$OUTPATH"
+          cp "$ARTIFACT" "$OUTPATH" || true
           echo "OUTPATH=$OUTPATH" >> $GITHUB_ENV
         shell: bash
 
@@ -178,10 +115,3 @@ jobs:
         with:
           name: ${{ env.OUT_NAME }}
           path: ${{ env.OUTPATH }}
-
-      - name: Upload raw target dir as fallback (optional, for debugging)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-src-tauri-target-${{ matrix.os }}-${{ matrix.arch }}
-          path: src-tauri/target
