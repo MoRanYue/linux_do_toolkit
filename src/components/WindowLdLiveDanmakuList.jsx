@@ -34,7 +34,6 @@ export function WindowLdLiveDanmakuList(props) {
     const [state, set_state] = createStore({
         settings: {
             bg_image: "",
-            style: "",
             web_hook_host: null,
             show_room_id: true,
             title: null
@@ -62,10 +61,24 @@ export function WindowLdLiveDanmakuList(props) {
                 roomId: state.room.id
             }
         })
-            .then(data => set_state({
-                danmakus: [
-                    ...state.danmakus,
-                    ...data.messages.danmakus.map(d => {
+            .then(data => {
+                if (import.meta.env.DEV) {
+                    console.log(data);
+                }
+
+                const danmakus = data.messages
+                    .filter(d => {
+                        for (let i = state.danmakus.length - 1; i > state.danmakus.length - 21 && i > 0; i--) {
+                            const original_d = state.danmakus[i];
+                            
+                            if (d.id == original_d.id) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    })
+                    .map(d => {
                         return {
                             id: d.id,
                             text: d.text,
@@ -74,10 +87,13 @@ export function WindowLdLiveDanmakuList(props) {
                             color: d.color,
                             time: new Date(d.timestamp)
                         };
-                    })
-                ],
-                update_time: new Date(data.data.update_timestamp)
-            }))
+                    });
+
+                set_state({
+                    danmakus: state.danmakus.concat(danmakus),
+                    update_time: new Date(data.lastUpdate)
+                });
+            })
             .catch(err => console.error(err));
         
         fetch_api({
@@ -88,10 +104,16 @@ export function WindowLdLiveDanmakuList(props) {
                 id: state.room.id
             }
         })
-            .then(data => set_state("room", reconcile({
-                title: data.room.title,
-                is_active: data.room.status === "active"
-            })))
+            .then(data => {
+                if (import.meta.env.DEV) {
+                    console.log(data);
+                }
+
+                set_state("room", {
+                    title: data.room.title,
+                    is_active: data.room.status === "active"
+                });
+            })
             .catch(err => console.error(err));
     }, 1000);
 
@@ -101,12 +123,23 @@ export function WindowLdLiveDanmakuList(props) {
             console.log(ev.payload);
         }
 
-        set_state(reconcile(ev.payload));
+        set_state(ev.payload);
     }).then(f => {
         unlisten_state = f;
 
         win.emit("ready", null);
     });
+
+    if (import.meta.env.DEV) {
+        set_state("danmakus", danmakus => danmakus.concat([{
+            id: "test",
+            text: "Test",
+            user_id: "test",
+            user_name: "Test User",
+            color: "#000000",
+            time: new Date()
+        }]));
+    }
 
     onCleanup(() => {
         clearInterval(timer);
@@ -116,36 +149,32 @@ export function WindowLdLiveDanmakuList(props) {
 
     return (
         <main class={styles["window-ld-live-danmaku-list"]}>
-            <Portal mount={document.head}>
+            {/* <Portal mount={document.head}>
                 <style>{state.settings.style}</style>
-            </Portal>
+            </Portal> */}
 
             <div class={styles.bg} style={{
-                "background-image": state.settings.bg_image
+                "background-image": state.settings.bg_image && `url(${state.settings.bg_image})`
             }} />
 
             <div class={styles.content}>
-                <Show when={state.room.is_active} fallback={(
-                    <header class={styles.header} data-tauri-drag-region>
-                        <h1>未开始</h1>
-                    </header>
-                )}>
-                    <header class={styles.header} data-tauri-drag-region>
+                <header class={styles.header} data-tauri-drag-region>
+                    <Show when={state.room.is_active} fallback={<h1>未开始</h1>}>
                         <h2>{state.settings.title || state.room.title}</h2>
 
                         <Show when={state.settings.show_room_id}>
-                            <p>{params.id}</p>
+                            <p>{state.room.id}</p>
                         </Show>
-                    </header>
+                    </Show>
+                </header>
 
-                    <ul class={styles.list}>
-                        <For each={state.danmakus}>
-                            {item => (
-                                <Danmaku item={item} />
-                            )}
-                        </For>
-                    </ul>
-                </Show>
+                <ul class={styles.list}>
+                    <For each={state.danmakus}>
+                        {({ text, user_name }) => (
+                            <Danmaku user_name={user_name}>{text}</Danmaku>
+                        )}
+                    </For>
+                </ul>
             </div>
         </main>
     );

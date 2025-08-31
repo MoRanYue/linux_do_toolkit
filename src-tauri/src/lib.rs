@@ -1,10 +1,11 @@
 pub mod commands;
 
-use tauri::{TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, TitleBarStyle, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_http::init())
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(
@@ -14,11 +15,7 @@ pub fn run() {
                 )?;
             }
 
-            let window_builder = WebviewWindowBuilder::new(
-                app,
-                "main",
-                WebviewUrl::default()
-            )
+            let window_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
                 .title("LINUX DO Toolkit")
                 .inner_size(600.0, 400.0);
 
@@ -54,6 +51,16 @@ pub fn run() {
         // .invoke_handler(tauri::generate_handler![
         //     commands::build_danmaku_list_window
         // ])
+        .on_window_event(|window, ev| {
+            match ev {
+                WindowEvent::CloseRequested { api, .. } => {
+                    if window.label() == "main" {
+                        window.app_handle().exit(0);
+                    }
+                },
+                _ => ()
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -16,6 +16,18 @@ import { Options } from "./components/Options";
 import { OptionsForumActivity } from "./components/OptionsForumActivity";
 import { OptionsLdListDanmakuList } from "./components/OptionsLdLiveDanmakuList";
 
+if (import.meta.env.PROD) {
+    window.addEventListener("keydown", ev => {
+        if (
+            ev.key == "F5" ||
+            (ev.ctrlKey && ev.key.toLowerCase() == "r") ||
+            (ev.metaKey && ev.key.toLowerCase() == "r")
+        ) {
+            ev.preventDefault();
+        }
+    });
+}
+
 render(() => (
     <WindowProvider>
         <HashRouter root={ViewTransition}>

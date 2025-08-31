@@ -12,13 +12,12 @@ import { FieldSet } from "./FieldSet";
 export function OptionsLdListDanmakuList() {
     let [win, set_win] = createSignal(null);
 
-    getAllWebviewWindows().then(windows => {
-        const win = windows.find(w => w.label === "ld_live_danmaku_list");
+    WebviewWindow.getByLabel("ld_live_danmaku_list").then(w => set_win(w));
 
-        if (win) {
-            set_win(win);
-        }
-    });
+    let stored_state = localStorage.getItem("ld_list_danmaku_list_options");
+    if (stored_state) {
+        stored_state = JSON.parse(stored_state);
+    }
 
     return (
         <section>
@@ -38,32 +37,38 @@ export function OptionsLdListDanmakuList() {
 
                     const form_data = ev.formData;
 
-                    set_win(new WebviewWindow("ld_live_danmaku_list", {
+                    const win = new WebviewWindow("ld_live_danmaku_list", {
                         url: "#/window/ld_live_danmaku_list",
                         title: "LINUX DO Toolkit < LD Live Danmaku List",
                         alwaysOnTop: true,
                         transparent: true,
                         decorations: false,
+                        shadow: false,
                         width: 275,
                         height: 825
-                    }));
+                    });
 
-                    win().once("ready", () => {
-                        win().emit("state", {
+                    set_win(win);
+
+                    win.once("ready", () => {
+                        const state = {
                             settings: {
                                 bg_image: form_data.get("bg_image"),
-                                style: form_data.get("style"),
                                 web_hook_host: form_data.get("web_hook_host"),
                                 title: form_data.get("title"),
-                                show_room_id: form_data.get("show_room_id")
+                                show_room_id: form_data.get("show_room_id") === "true"
                             },
                             room: {
                                 id: form_data.get("room_id")
                             }
-                        });
+                        };
+
+                        localStorage.setItem("ld_list_danmaku_list_options", JSON.stringify(state));
+
+                        win.emit("state", state);
                     });
 
-                    win().once("tauri://destroyed", () => set_win(null));
+                    win.onCloseRequested(() => set_win(null));
                 }}
             >
                 <FieldSet disabled={(() => !!win())()}>
@@ -71,28 +76,32 @@ export function OptionsLdListDanmakuList() {
                         label="房间ID"
                         name="room_id"
                         id="room_id"
+                        value={stored_state && stored_state.room.id}
                         required
                     />
                     <FormInputText
                         label="自定义标题"
                         name="title"
                         id="title"
+                        value={stored_state && stored_state.settings.title}
                     />
                     <FormInputCheckbox
                         label="显示房间ID"
                         name="show_room_id"
                         id="show_room_id"
+                        value={stored_state && stored_state.settings.show_room_id}
                     />
-
                     <FormInputText
                         label="背景图像"
+                        name="bg_image"
+                        id="bg_image"
+                        value={stored_state && stored_state.settings.bg_image}
+                    />
+                    <FormInputText
+                        label="WebHook主机"
                         name="web_hook_host"
                         id="web_hook_host"
-                    />
-                    <FormTextarea
-                        label="CSS"
-                        name="style"
-                        id="style"
+                        value={stored_state && stored_state.settings.web_hook_host}
                     />
                 </FieldSet>
 
