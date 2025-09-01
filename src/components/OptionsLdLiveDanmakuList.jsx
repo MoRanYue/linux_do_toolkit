@@ -57,7 +57,7 @@ export function OptionsLdListDanmakuList() {
 
                     set_win(win);
 
-                    win.once("ready", () => {
+                    const unlisten_ready = win.listen("ready", () => {
                         const state = {
                             settings: {
                                 bg_image: form_data.get("settings-bg_image"),
@@ -78,7 +78,11 @@ export function OptionsLdListDanmakuList() {
                         win.emit("state", state);
                     });
 
-                    win.onCloseRequested(() => set_win(null));
+                    win.onCloseRequested(() => {
+                        unlisten_ready();
+
+                        set_win(null);
+                    });
                 }}
             >
                 <FieldSet disabled={(() => !!win())()}>

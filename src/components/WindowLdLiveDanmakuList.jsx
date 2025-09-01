@@ -31,6 +31,8 @@ const BASE_URL = "https://live.smnet.studio";
 export function WindowLdLiveDanmakuList(props) {
     const win = getCurrentWebviewWindow();
 
+    let list_elem;
+
     const [state, set_state] = createStore({
         settings: {
             bg_image: "",
@@ -50,6 +52,8 @@ export function WindowLdLiveDanmakuList(props) {
         update_time: new Date(),
         error: null
     });
+
+    let scrolling_timer = null;
 
     const timer = setInterval(() => {
         if (!state.room.id) {
@@ -93,21 +97,36 @@ export function WindowLdLiveDanmakuList(props) {
                         };
                     });
                 
-                if (danmakus.length && state.settings.web_hook.url) {
-                    fetch_api({
-                        path: state.settings.web_hook.url,
-                        method: HttpMethod.Post,
-                        body: {
-                            hook: "danmaku_sent",
-                            danmakus: danmakus.map(d => { return { ...d, time: d.time.getTime() } })
-                        }
-                    });
-                }
-
                 set_state({
                     danmakus: state.danmakus.concat(danmakus),
                     update_time: new Date(data.lastUpdate)
                 });
+                
+                if (danmakus.length) {
+                    if (scrolling_timer) {
+                        clearTimeout(scrolling_timer);
+                    }
+                    
+                    scrolling_timer = setTimeout(() => {
+                        list_elem.scrollTo({
+                            behavior: "smooth",
+                            top: list_elem.scrollHeight
+                        });
+
+                        scrolling_timer = null;
+                    }, 1000);
+
+                    if (state.settings.web_hook.url) {
+                        fetch_api({
+                            path: state.settings.web_hook.url,
+                            method: HttpMethod.Post,
+                            body: {
+                                hook: "danmaku_sent",
+                                danmakus: danmakus.map(d => { return { ...d, time: d.time.getTime() } })
+                            }
+                        });
+                    }
+                }
             })
             .catch(err => console.error(err));
         
@@ -146,14 +165,16 @@ export function WindowLdLiveDanmakuList(props) {
     });
 
     // if (import.meta.env.DEV) {
-    //     set_state("danmakus", danmakus => danmakus.concat([{
-    //         id: "test",
-    //         text: "Test",
-    //         user_id: "test",
-    //         user_name: "Test User",
-    //         color: "#000000",
-    //         time: new Date()
-    //     }]));
+    //     setInterval(() => {
+    //         set_state("danmakus", danmakus => danmakus.concat([{
+    //             id: "test",
+    //             text: "Test",
+    //             user_id: "test",
+    //             user_name: "Test User",
+    //             color: "#000000",
+    //             time: new Date()
+    //         }]));
+    //     }, 1000);
     // }
 
     onCleanup(() => {
@@ -183,7 +204,7 @@ export function WindowLdLiveDanmakuList(props) {
                     </Show>
                 </header>
 
-                <ul class={styles.list}>
+                <ul class={styles.list} ref={list_elem}>
                     <For each={state.danmakus}>
                         {({ text, user_name }) => (
                             <Danmaku user_name={user_name}>{text}</Danmaku>
