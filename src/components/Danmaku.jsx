@@ -50,6 +50,10 @@ export function Danmaku(props) {
                 </div>
             </div>
 
+            <div class={styles.metadata}>
+                <span class={styles.time}>{props.time.toLocaleString()}</span>
+            </div>
+
             <div class={styles.content}>
                 {props.children}
             </div>

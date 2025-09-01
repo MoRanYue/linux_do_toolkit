@@ -3,6 +3,7 @@
 
     position: relative;
     display: flex;
+    flex-direction: column;
     background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(5px);
     width: 100%;
@@ -78,7 +79,17 @@
         }
     }
 
+    .metadata {
+        font-size: 0.75rem;
+        user-select: none;
+
+        .time {
+            color: var(--text-muted);
+        }
+    }
+
     .content {
         font-size: 1.25rem;
+        word-break: break-all;
     }
 }

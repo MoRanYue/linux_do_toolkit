@@ -207,8 +207,8 @@ export function WindowLdLiveDanmakuList(props) {
 
                 <ul class={styles.list} ref={list_elem}>
                     <For each={state.danmakus}>
-                        {({ text, user_name }) => (
-                            <Danmaku user_name={user_name}>{text}</Danmaku>
+                        {({ text, user_name, time }) => (
+                            <Danmaku user_name={user_name} time={time}>{text}</Danmaku>
                         )}
                     </For>
                 </ul>
