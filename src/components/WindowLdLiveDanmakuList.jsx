@@ -1,12 +1,16 @@
-import { For, Show, createSignal, onCleanup, onMount } from "solid-js";
+import { For, Show, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import styles from "../assets/window-ld-live-danmaku-list.module.less";
 import "../assets/transparent-bg.less";
-import { fetch_api, HttpMethod } from "../utils";
+import { fetch_api, FormDataParser, HttpMethod } from "../utils";
 import { createStore, reconcile } from "solid-js/store";
 import { Danmaku } from "./Danmaku";
 import { createAsync, useParams, useSearchParams } from "@solidjs/router";
 import { Portal } from "solid-js/web";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { Form } from "./Form";
+import { InputText } from "./InputText";
+import { Button } from "./Button";
+import { FieldSet } from "./FieldSet";
 
 /**
  * @typedef {object} DanmakuView
@@ -42,7 +46,13 @@ export function WindowLdLiveDanmakuList(props) {
             },
             show_room_id: true,
             title: null,
-            session_token: null
+            can_send_danmaku: false
+        },
+        self: {
+            cookies: "",
+            name: "",
+            id: "",
+            avatar_url: ""
         },
         room: {
             id: "",
@@ -51,7 +61,8 @@ export function WindowLdLiveDanmakuList(props) {
         },
         danmakus: [],
         update_time: new Date(),
-        error: null
+        error: null,
+        is_danmaku_sending: false
     });
 
     let scrolling_timer = null;
@@ -178,6 +189,30 @@ export function WindowLdLiveDanmakuList(props) {
     //     }, 1000);
     // }
 
+    createEffect(() => {
+        if (state.self.cookies) {
+            document.cookie = state.self.cookies;
+
+            fetch_api({
+                method: HttpMethod.Get,
+                path: "/api/me",
+                base_url: BASE_URL,
+                headers: {
+                    Cookie: state.self.cookies
+                }
+            })
+                .then(data => {
+                    set_state("self", {
+                        id: data.user.id,
+                        name: data.user.name,
+                        avatar_url: data.user.avatar_url
+                    });
+
+                    console.log(state.self);
+                });
+        }
+    });
+
     onCleanup(() => {
         clearInterval(timer);
 
@@ -207,11 +242,73 @@ export function WindowLdLiveDanmakuList(props) {
 
                 <ul class={styles.list} ref={list_elem}>
                     <For each={state.danmakus}>
-                        {({ text, user_name, time }) => (
-                            <Danmaku user_name={user_name} time={time}>{text}</Danmaku>
+                        {({ text, user_name, time, user_id }) => (
+                            <Danmaku
+                                user_name={user_name}
+                                time={time}
+                                avatar_url={user_id === state.self.id && state.self.avatar_url}
+                            >{text}</Danmaku>
                         )}
                     </For>
                 </ul>
+
+                <Show when={state.self.id && state.settings.can_send_danmaku}>
+                    <Form
+                        class={styles["danmaku-form"]}
+                        onSubmit={ev => {
+                            ev.preventDefault();
+
+                            new FormData(ev.target);
+                        }}
+                        onFormData={ev => {
+                            ev.preventDefault();
+
+                            const danmaku = new FormDataParser(ev.formData).unflatten();
+
+                            set_state("is_danmaku_sending", true);
+                            
+                            fetch_api({
+                                method: HttpMethod.Post,
+                                path: "/api/danmaku-send",
+                                base_url: BASE_URL,
+                                body: {
+                                    userId: state.self.id,
+                                    username: state.self.name,
+                                    text: danmaku.text,
+                                    roomId: state.room.id,
+                                    color: danmaku.color.substring(1).toLowerCase()
+                                },
+                                headers: {
+                                    Cookie: state.self.cookies
+                                }
+                            })
+                                .then(data => console.log(data))
+                                .finally(() => set_state("is_danmaku_sending", false));
+                        }}
+                    >
+                        <InputText
+                            name="text(String)"
+                            id="text"
+                            placeholder="弹幕内容"
+                            required
+                        />
+
+                        <FieldSet>
+                            <InputText
+                                name="color(String)"
+                                id="color"
+                                placeholder="HEX颜色代码"
+                                value="#FFFFFF"
+                                pattern="^#[0-9a-fA-F]{6}$"
+                                required
+                            />
+                            <Button
+                                type="submit"
+                                disabled={state.is_danmaku_sending}
+                            >{state.is_danmaku_sending ? "发送中" : "发送"}</Button>
+                        </FieldSet>
+                    </Form>
+                </Show>
             </div>
         </main>
     );

@@ -48,7 +48,6 @@ export const HttpMethod = Object.freeze({
  * @property {Record<string, string | string[]>} [query]
  * @property {Record<string, string | string[]>} [headers]
  * @property {any} [body]
- * @property {Function} [token]
  */
 
 /**
@@ -61,20 +60,12 @@ export async function fetch_api(options) {
         method,
         timeout_ms = 10000,
         query = {},
-        headers = {},
-        token,
+        headers = {}
     } = options;
 
     let body = options.body || null;
 
     const final_headers = { ...headers };
-    if (typeof token === 'function') {
-        const token_ = token();
-
-        if (token_) {
-            final_headers.Authorization = token_;
-        }
-    }
 
     if (body != null && !(body instanceof FormData)) {
         if (!final_headers["Content-Type"]) {
@@ -116,6 +107,7 @@ export async function fetch_api(options) {
             method,
             headers: final_headers,
             body,
+            credentials: "include",
             signal: controller.signal
         }
     );

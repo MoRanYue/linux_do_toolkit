@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { Match, Show, Switch } from "solid-js";
 import styles from "../assets/danmaku.module.less";
 
 /**
@@ -44,9 +44,14 @@ export function Danmaku(props) {
                     "background-color": color_from_3_chars(props.user_name)
                 }}>
                     {/* use user name as an alternative */}
-                    <Show when={props.user_name !== "游客"}>
-                        <span class={styles.image}>{props.user_name.charAt(0)}</span>
-                    </Show>
+                    <Switch>
+                        <Match when={props.avatar_url}>
+                            <img class={styles.image} src={props.avatar_url} />
+                        </Match>
+                        <Match when={props.user_name !== "游客"}>
+                            <span class={styles.text}>{props.user_name.charAt(0)}</span>
+                        </Match>
+                    </Switch>
                 </div>
             </div>
 

@@ -10,6 +10,7 @@ import { Window } from "@tauri-apps/api/window";
 import { FieldSet } from "./FieldSet";
 import { FormInputPassword } from "./FormInputPassword";
 import { FormDataParser } from "../utils";
+import { createStore } from "solid-js/store";
 
 export function OptionsLdListDanmakuList() {
     let [win, set_win] = createSignal(null);
@@ -20,6 +21,10 @@ export function OptionsLdListDanmakuList() {
     if (stored_state) {
         stored_state = JSON.parse(stored_state);
     }
+
+    const [view_state, set_view_state] = createStore({
+        show_funcs_user_dedicated: stored_state && stored_state.self && stored_state.self.cookies
+    });
 
     return (
         <section>
@@ -118,11 +123,19 @@ export function OptionsLdListDanmakuList() {
                     
                     <FormInputPassword
                         label="Cookie"
-                        name="settings-session_token(String)"
-                        id="settings-session_token"
-                        value={stored_state && stored_state.settings.session_token}
+                        name="self-cookies(String)"
+                        id="self-cookies"
+                        value={stored_state && stored_state.self && stored_state.self.cookies}
+                        onInput={ev => set_view_state("show_funcs_user_dedicated", !!ev.target.value)}
                     />
-                    
+                    <Show when={view_state.show_funcs_user_dedicated}>
+                        <FormInputCheckbox
+                            label="开启发送弹幕"
+                            name="settings-can_send_danmaku(bool)"
+                            id="settings-can_send_danmaku"
+                            checked={stored_state && stored_state.settings.can_send_danmaku}
+                        />
+                    </Show>
                 </FieldSet>
 
                 <Button type="submit">{ win() ? "关闭" : "打开" }</Button>
