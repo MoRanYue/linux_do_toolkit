@@ -4,7 +4,7 @@ import styles from "../assets/input-checkbox.module.less";
 export function InputCheckbox(props) {
     return (
         <>
-            {/* <input type="hidden" name={props.name} value="false" /> */}
+            <input type="hidden" name={props.name} value="false" />
             <input
                 type="checkbox"
                 class={`${styles["input-checkbox"]} ${props.class || ""}`}
