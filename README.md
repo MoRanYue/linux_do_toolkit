@@ -23,6 +23,7 @@
 ```
 git clone https://github.com/MoRanYue/linux_do_toolkit
 cd linux_do_toolkit
+bun install
 cargo tauri build
 ```
 
