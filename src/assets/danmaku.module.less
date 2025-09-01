@@ -13,6 +13,18 @@
     @radius: 16px;
     border-radius: @radius;
     margin-top: @avatar-size / 2;
+    animation: entering 0.3s ease-out 1;
+
+    @keyframes entering {
+        from {
+            opacity: 0;
+            transform: translateY(-100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
     .name {
         position: absolute;
@@ -32,6 +44,7 @@
         .name {
             position: static;
             background: var(--bg-light);
+            white-space: pre;
             padding: 0.5em;
             transform: translateX(-@avatar-size / 2);
             padding-left: @avatar-size / 2 + 0.25em;
@@ -41,6 +54,7 @@
         }
 
         .avatar {
+            flex-shrink: 0;
             position: relative;
             width: @avatar-size;
             height: @avatar-size;

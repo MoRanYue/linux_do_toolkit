@@ -41,7 +41,8 @@ export function WindowLdLiveDanmakuList(props) {
                 auth_token: ""
             },
             show_room_id: true,
-            title: null
+            title: null,
+            session_token: null
         },
         room: {
             id: "",

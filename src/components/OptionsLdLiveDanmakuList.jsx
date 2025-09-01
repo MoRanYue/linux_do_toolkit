@@ -92,6 +92,9 @@ export function OptionsLdListDanmakuList() {
                         id="settings-show_room_id"
                         checked={stored_state && stored_state.settings.show_room_id}
                     />
+
+                    <hr />
+
                     <FormInputText
                         label="背景图像"
                         name="settings-bg_image(String)"
@@ -109,6 +112,15 @@ export function OptionsLdListDanmakuList() {
                         name="settings-web_hook-auth_token(String)"
                         id="settings-web_hook-auth_token"
                         value={stored_state && stored_state.settings.web_hook.auth_token}
+                    />
+
+                    <hr />
+                    
+                    <FormInputPassword
+                        label="Cookie"
+                        name="settings-session_token(String)"
+                        id="settings-session_token"
+                        value={stored_state && stored_state.settings.session_token}
                     />
                     
                 </FieldSet>
